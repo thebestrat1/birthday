@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Birthday Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Press Start 2P', monospace;
+      overflow: hidden;
+      background-color: #f0f8ff;
+    }
+
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background-color: #8ecae6;
+      overflow: hidden;
+    }
+
+    #player {
+      position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 70px;
+  background: url(https://dinopixel.com/preload/0223/Player.png) no-repeat center center / cover;
+  
+
+    }
+
+    #modal, #npc-modal, #dialogue-box, #letter-modal, #letter-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: black;
+      color: white;
+      font-family: 'Press Start 2P', monospace;
+      padding: 20px;
+      border-radius: 10px;
+      z-index: 10;
+      text-align: center;
+      display: none;
+    }
+
+    #modal {
+      display: block;
+    }
+
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 16px;
+      color: white;
+      background: black;
+      padding: 5px 10px;
+      border-radius: 5px;
+      display: none;
+    }
+
+    .falling-item {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background-color: transparent;
+    }
+
+    #npc {
+      position: absolute;
+  bottom: 50px;
+  right: 50px;
+  width: 90px;
+  height: 90px;
+  background: url(https://dinopixel.com/preload/0922/Player.png) no-repeat center center / cover;
+
+  display: none;
+    }
+
+    #letter-icon {
+      display: inline-block;
+      width: 60px;
+      height: 60px;
+      background: url(https://i.pinimg.com/564x/18/70/76/187076241e01b4e6c932c6b669d33cfe.jpg) no-repeat center center / contain;
+      margin-right: 5px;
+    }
+
+    .falling-item[data-type="heart"] {
+  background: url(https://dinopixel.com/preload/0822/Heart.png) no-repeat center center  / contain;
+  width: 110px;
+  height: 110px 
+}
+.falling-item[data-type="cake"] {
+  background: url(https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/4616a33c-bbd5-4872-9cd1-f4a602951523/d4vguxd-c8ecacae-a228-4b41-967a-9fca047cb266.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzQ2MTZhMzNjLWJiZDUtNDg3Mi05Y2QxLWY0YTYwMjk1MTUyM1wvZDR2Z3V4ZC1jOGVjYWNhZS1hMjI4LTRiNDEtOTY3YS05ZmNhMDQ3Y2IyNjYucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.jZyyx5w-ngeZWRL_Yf3LocQz6YpTO9OGYrxj3foEiO8) no-repeat center center  / contain;
+  width: 60px;
+  height: 60px;
+}
+.falling-item[data-type="stick"] {
+  background: url(https://dinopixel.com/preload/0624/stick.png) no-repeat center center  / contain;
+  width: 90px;
+  height: 90px;
+}
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="player"></div>
+    <div id="score">Objective: 0/5 Hearts, 0/5 Cakes</div>
+    <div id="modal">
+      <p>Objective: Collect 5 Hearts and 5 Cakes<br>(Use your arrow keys)</br></p>
+      <button onclick="startGame()">Start Game</button>
+    </div>
+    <div id="npc-modal">
+      <p>What is that goose doing there?</p>
+      <button onclick="closeNPCModal()">Close</button>
+    </div>
+    <div id="dialogue-box">
+      <p id="dialogue-text"></p>
+      <button id="option-a" onclick="chooseOption('A')">A. Why are you here?</button>
+      <button id="option-b" onclick="chooseOption('B')">B. Give her the cakes and hearts</button>
+    </div>
+    <div id="letter-modal">
+      <span id="letter-icon"></span>
+      <p>You received a letter! Open it?</p>
+      <button onclick="openLetter()">Yes</button>
+      <button onclick="rejectLetter()">No</button>
+    </div>
+    <div id="letter-content">
+      <p style="font-size: 25px;"></p>
+      <p>
+        happy birthday dinie. dh tua dh kau. it's nice knowing you, sorry and thank you for everything! aku doakan kau sentiasa happy + berjaya di dunia & akhirat. jangan selalu nakal2 and jaga diri ye. hehe happy bday!
+      </p>
+      <button onclick="closeLetter()">Close</button>
+    </div>
+    <div id="npc"></div>
+  </div>
+
+  <script>
+    const gameContainer = document.getElementById('game-container');
+    const player = document.getElementById('player');
+    const modal = document.getElementById('modal');
+    const scoreDisplay = document.getElementById('score');
+    const npcModal = document.getElementById('npc-modal');
+    const dialogueBox = document.getElementById('dialogue-box');
+    const dialogueText = document.getElementById('dialogue-text');
+    const letterModal = document.getElementById('letter-modal');
+    const letterContent = document.getElementById('letter-content');
+    const npc = document.getElementById('npc');
+    const optionA = document.getElementById('option-a');
+    const optionB = document.getElementById('option-b');
+
+    let heartsCollected = 0;
+    let cakesCollected = 0;
+    let sticksTouched = false;
+    let gameRunning = false;
+    let itemGenerationInterval;
+
+    document.addEventListener('keydown', (e) => {
+      const playerLeft = parseInt(window.getComputedStyle(player).getPropertyValue('left'));
+      if (e.key === 'ArrowLeft' && playerLeft > 0) {
+        player.style.left = `${playerLeft - 20}px`;
+      } else if (e.key === 'ArrowRight' && playerLeft < window.innerWidth - 50) {
+        player.style.left = `${playerLeft + 20}px`;
+      }
+      checkCollisionWithNPC();
+    });
+
+    function startGame() {
+      modal.style.display = 'none';
+      scoreDisplay.style.display = 'block';
+      gameRunning = true;
+      itemGenerationInterval = setInterval(generateItems, 800);
+    }
+
+    function generateItems() {
+      if (!gameRunning) return;
+
+      const item = document.createElement('div');
+      item.classList.add('falling-item');
+
+      const randomType = Math.random();
+      if (randomType < 0.4) {
+        item.style.backgroundColor = 'transparent'; // Heart
+        item.dataset.type = 'heart';
+      } else if (randomType < 0.8) {
+        item.style.backgroundColor = 'transparent'; // Cake
+        item.dataset.type = 'cake';
+      } else {
+        item.style.backgroundColor = 'transparent'; // Stick
+        item.dataset.type = 'stick';
+      }
+
+      item.style.left = `${Math.random() * (window.innerWidth - 30)}px`;
+      item.style.top = '0px';
+      gameContainer.appendChild(item);
+
+      let fallInterval = setInterval(() => {
+        const itemTop = item.offsetTop;
+        const playerBounds = player.getBoundingClientRect();
+        const itemBounds = item.getBoundingClientRect();
+
+        if (
+          itemBounds.top + itemBounds.height >= playerBounds.top &&
+          itemBounds.left + itemBounds.width >= playerBounds.left &&
+          itemBounds.left <= playerBounds.right
+        ) {
+          checkCollision(item);
+          item.remove();
+          clearInterval(fallInterval);
+        } else if (itemTop >= window.innerHeight - 30) {
+          item.remove();
+          clearInterval(fallInterval);
+        } else {
+          item.style.top = `${itemTop + 5}px`;
+        }
+      }, 50);
+    }
+
+    function checkCollision(item) {
+      const itemType = item.dataset.type;
+      if (itemType === 'heart') {
+        heartsCollected++;
+      } else if (itemType === 'cake') {
+        cakesCollected++;
+      } else if (itemType === 'stick') {
+        sticksTouched = true;
+        gameOver();
+        return;
+      }
+
+      updateScore();
+    }
+
+    function updateScore() {
+      scoreDisplay.textContent = `Objective: ${heartsCollected}/5 Hearts, ${cakesCollected}/5 Cakes`;
+
+      if (heartsCollected >= 5 && cakesCollected >= 5) {
+        npc.style.display = 'block';
+        npcModal.style.display = 'block';
+        stopFallingItems();
+      }
+    }
+
+    function stopFallingItems() {
+      clearInterval(itemGenerationInterval);
+      const allItems = document.querySelectorAll('.falling-item');
+      allItems.forEach(item => item.remove());
+    }
+
+    function closeNPCModal() {
+      npcModal.style.display = 'none';
+    }
+
+    function checkCollisionWithNPC() {
+      const playerBounds = player.getBoundingClientRect();
+      const npcBounds = npc.getBoundingClientRect();
+
+      if (
+        npc.style.display === 'block' &&
+        playerBounds.top < npcBounds.bottom &&
+        playerBounds.bottom > npcBounds.top &&
+        playerBounds.left < npcBounds.right &&
+        playerBounds.right > npcBounds.left
+      ) {
+        showDialogue();
+      }
+    }
+
+    function showDialogue() {
+      dialogueBox.style.display = 'block';
+    }
+
+    function chooseOption(option) {
+      if (option === 'A') {
+        dialogueText.textContent = "Why are you here?";
+        optionA.style.display = 'none';
+        setTimeout(() => {
+          dialogueText.textContent = "Goose: I was sent here by Zaara to meet you!";
+          optionB.textContent = "B. Give it the cakes and hearts";
+        }, 1000);
+      } else if (option === 'B') {
+        dialogueText.textContent = "Goose: Oh, how nice of you! In return, here is a letter Zaara told me to give you.";
+        optionA.style.display = 'none';
+        optionB.style.display = 'none';
+        setTimeout(() => {
+          dialogueBox.style.display = 'none';
+          letterModal.style.display = 'block';
+        }, 2000);
+      }
+    }
+
+    function openLetter() {
+      letterModal.style.display = 'none';
+      letterContent.style.display = 'block';
+      npc.style.display = 'none'; // NPC disappears here
+    }
+
+    function rejectLetter() {
+      alert("kena pilih yes jugak >:(");
+    }
+
+    function closeLetter() {
+      letterContent.style.display = 'none';
+      alert('tu jee, happy bdayy');
+    }
+
+    function gameOver() {
+      alert('A stick hits you! Game over. Try again.');
+      location.reload();
+    }
+  </script>
+</body>
+</html>
